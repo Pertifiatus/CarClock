@@ -37,7 +37,7 @@ void loop() {
   
   // Temperatur auslesen und anzeigen
   Serial.print(" -- Temp: ");
-  Serial.print(rtc.getTemp()-1.5); // Gibt die Temperatur als float zurück
+  Serial.print(rtc.getTemp()-3.25); // Gibt die Temperatur als float zurück
   Serial.println(" C");
   
   delay(1000);
