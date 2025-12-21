@@ -1,7 +1,9 @@
-#include <DS3231.h>
+#include "DS3231.h"
 #include <Servo.h>
+#include "LiquidCrystal_SoftI2C.h"
 
-// RTC an Pin 6 (SDA) und 7 (SCL)
+
+SoftwareWire myWire(6, 7); // SDA an 6, SCL an 7
 DS3231 rtc(6, 7);
 Time t;
 

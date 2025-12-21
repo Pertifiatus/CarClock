@@ -1,73 +1,112 @@
-#include <DS3231.h>
+#include "DS3231.h"
 #include <Servo.h>
-#include <SoftwareWire.h>
-#include <LiquidCrystal_SoftI2C.h> 
+#include "LiquidCrystal_SoftI2C.h"
 
-const int sdaPin = 6;
-const int sclPin = 7;
 
-SoftwareWire myWire(sdaPin, sclPin);
-DS3231 rtc(sdaPin, sclPin);
-Time t;
+SoftwareWire myWire(6, 7); // SDA an 6, SCL an 7
+DS3231 rtc(&myWire);
 LiquidCrystal_I2C lcd(0x26, 16, 2, &myWire);
+Time t;
 
-// Hilfsvariablen
-unsigned long lastUpdate = 0;
+// Servo Objekte
+Servo TempServo;
+Servo MinServo;
+Servo StdServo;
+Servo FuelServo;
+
+// Pins für die Servos
+const int pinTemp = 2;
+const int pinMin  = 4;
+const int pinStd  = 3;
+const int pinFuel = 5;
+const int pinBat  = A0; // Analoger Pin für Batteriespannung
+
+// Speicher für alte Werte (um nur bei Änderung zu bewegen)
+int oldMin  = -1;
+int oldStd  = -1;
+int oldTemp = -1;
+int oldFuel = -1;
 
 void setup() {
   Serial.begin(9600);
-  delay(2000); 
-  Serial.println("--- MODUS: STABILER BUS ---");
-
-  // 1. RTC starten und einmalig Zeit holen
+  myWire.begin(); 
+  lcd.begin();
   rtc.begin();
-  t = rtc.getTime();
-  Serial.print("Startzeit: ");
-  Serial.println(rtc.getTimeStr());
-
-  // 2. LCD starten
-  lcd.begin(); 
-  lcd.backlight();
-  lcd.print("System Aktiv");
-  delay(1000);
+  lcd.print("Willkommen Sibel");
+  lcd.setCursor(0, 1);
+  lcd.print("       <3       ");
+  delay(4000);
   lcd.clear();
+  // Initialprüfung der Zeit
+  t = rtc.getTime();
+  if (t.year < 2025) {
+    rtc.setDOW(SUNDAY);      
+    rtc.setTime(0, 31, 0);    
+    rtc.setDate(21, 12, 2025);
+  }
+}
+
+// Hilfsfunktion zum Bewegen und Abschalten
+void moveAndDetach(Servo &s, int pin, int angle) {
+  s.attach(pin);
+  s.write(angle);
+  delay(600); // Zeit zum Erreichen der Position
+  s.detach();
 }
 
 void loop() {
-  // Wir aktualisieren die Anzeige nur jede Sekunde
-  if (millis() - lastUpdate >= 1000) {
-    lastUpdate = millis();
-
-    // Wir riskieren KEINEN rtc.getTime() im Loop, 
-    // solange wir nicht wissen, ob der Bus frei ist.
-    // Stattdessen nutzen wir die interne Uhr des Arduino für die Anzeige:
-    
-    static int s = t.sec;
-    static int m = t.min;
-    static int h = t.hour;
-
-    s++;
-    if (s >= 60) { s = 0; m++; }
-    if (m >= 60) { m = 0; h++; }
-    if (h >= 24) { h = 0; }
-
-    // Anzeige auf LCD
-    lcd.setCursor(0, 0);
-    if(h<10) lcd.print("0"); lcd.print(h);
-    lcd.print(":");
-    if(m<10) lcd.print("0"); lcd.print(m);
-    lcd.print(":");
-    if(s<10) lcd.print("0"); lcd.print(s);
-    
-    // Serieller Monitor
-    Serial.print("Zeit: ");
-    Serial.print(h); Serial.print(":"); Serial.println(m);
-
-    // Alle 30 Sekunden versuchen wir die RTC neu zu synchronisieren
-    if (s == 30) {
-       Serial.println("Synchronisiere RTC...");
-       // Hier koennte man rtc.getTime() versuchen, 
-       // aber wir lassen es erst mal weg, um den Freeze zu vermeiden.
-    }
+  t = rtc.getTime();
+  float currentTemp = rtc.getTemp() - 2.25;
+  
+  // 1. STUNDEN (Skala 0-12h -> 0-180 Grad)
+  int h = t.hour;
+  if (h >= 12) h -= 12;
+  if (h != oldStd) {
+    int angle = map(h, 0, 12, 0, 180);
+    moveAndDetach(StdServo, pinStd, angle);
+    oldStd = h;
   }
+
+  // 2. MINUTEN (Skala 0-60min -> 0-180 Grad)
+  if (t.min != oldMin) {
+    int angle = map(t.min, 0, 60, 163, 15);
+    moveAndDetach(MinServo, pinMin, angle);
+    oldMin = t.min;
+  }
+
+  // 3. TEMPERATUR (Skala 15°C - 35°C -> 0-180 Grad)
+  int tempInt = (int)currentTemp;
+  if (tempInt != oldTemp) {
+    int angle = map(tempInt, 15, 35, 0, 180);
+    angle = constrain(angle, 0, 180);
+    moveAndDetach(TempServo, pinTemp, angle);
+    oldTemp = tempInt;
+  }
+
+  // 4. FUEL (Batteriespannung 2.5V - 3.2V -> 0-180 Grad)
+  int rawBat = analogRead(pinBat);
+  float voltage = rawBat * (5.0 / 1023.0);
+  int fuelPercent = map(voltage * 100, 200, 320, 0, 180); // In Millivolt für map()
+  fuelPercent = constrain(fuelPercent, 0, 180);
+  
+  if (abs(fuelPercent - oldFuel) > 2) { // Nur bei merklicher Änderung (Rauschen verhindern)
+    moveAndDetach(FuelServo, pinFuel, fuelPercent);
+    oldFuel = fuelPercent;
+  }
+
+  // Serieller Monitor zur Kontrolle
+  Serial.print(rtc.getTimeStr());
+  Serial.print(" | Temp: ");
+  Serial.print(currentTemp);
+  Serial.print("C | Bat: ");
+  Serial.print(voltage);
+  Serial.println("V");
+  
+  
+  lcd.setCursor(0,0);
+  lcd.print(rtc.getTimeStr()); // Funktioniert jetzt ohne Absturz!
+  lcd.setCursor(0, 1);
+  lcd.print(currentTemp);
+
+  delay(1000); 
 }
