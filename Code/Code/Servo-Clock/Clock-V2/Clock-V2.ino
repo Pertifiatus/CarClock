@@ -60,7 +60,7 @@ void loop() {
 
   // 2. MINUTEN (Skala 0-60min -> 0-180 Grad)
   if (t.min != oldMin) {
-    int angle = map(t.min, 0, 60, 180, 25);
+    int angle = map(t.min, 0, 60, 163, 15);
     moveAndDetach(MinServo, pinMin, angle);
     oldMin = t.min;
   }

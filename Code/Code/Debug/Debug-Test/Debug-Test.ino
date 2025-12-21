@@ -34,12 +34,12 @@ void moveAndDetach(Servo &s, int pin, int angle) {
 
 void loop() {
   // 1. SIMULATION: MINUTEN (schneller Durchlauf)
-  int minAngle = map(testMin, 0, 60, 180, 25);
+  int minAngle = map(testMin, 0, 60, 175, 15);
   Serial.print("Minute: "); Serial.print(testMin);
   moveAndDetach(MinServo, pinMin, minAngle);
 
   // 2. SIMULATION: STUNDEN
-  int stdAngle = map(testStd, 0, 12, 0, 180);
+  int stdAngle = map(testStd, 0, 12, 163, 14);
   Serial.print(" | Stunde: "); Serial.print(testStd);
   moveAndDetach(StdServo, pinStd, stdAngle);
 
@@ -56,7 +56,7 @@ void loop() {
   Serial.print(" | S-Wave: "); Serial.println(sineWave);
 
   // Werte für den nächsten Durchgang erhöhen
-  testMin++;
+  testMin+=10;
   if (testMin > 60) {
     testMin = 0;
     testStd++;
