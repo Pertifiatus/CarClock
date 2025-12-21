@@ -47,7 +47,7 @@ void moveAndDetach(Servo &s, int pin, int angle) {
 
 void loop() {
   t = rtc.getTime();
-  float currentTemp = rtc.getTemp() - 3.25;
+  float currentTemp = rtc.getTemp() - 2.25;
   
   // 1. STUNDEN (Skala 0-12h -> 0-180 Grad)
   int h = t.hour;
@@ -77,7 +77,7 @@ void loop() {
   // 4. FUEL (Batteriespannung 2.5V - 3.2V -> 0-180 Grad)
   int rawBat = analogRead(pinBat);
   float voltage = rawBat * (5.0 / 1023.0);
-  int fuelPercent = map(voltage * 100, 250, 320, 0, 180); // In Millivolt für map()
+  int fuelPercent = map(voltage * 100, 200, 320, 0, 180); // In Millivolt für map()
   fuelPercent = constrain(fuelPercent, 0, 180);
   
   if (abs(fuelPercent - oldFuel) > 2) { // Nur bei merklicher Änderung (Rauschen verhindern)
@@ -93,5 +93,5 @@ void loop() {
   Serial.print(voltage);
   Serial.println("V");
 
-  delay(2000); 
+  delay(5000); 
 }
