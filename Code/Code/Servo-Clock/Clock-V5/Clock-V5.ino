@@ -73,7 +73,7 @@ void setup() {
   lcd.setCursor(5,1);
   lcd.print("OK :)");
   delay(1000);
-  lcd.setCursor(3,1);11x
+  lcd.setCursor(3,1);
   lcd.print("Test-Hour");
   for (int pos = 163; pos >= 19; pos -= 1) { // goes from 0 degrees to 180 degrees
     // in steps of 1 degree
@@ -175,13 +175,14 @@ void loop() {
   }
   */
   if(t.hour>=21) lcd.noBacklight();
+  if(t.hour<21) lcd.backlight();
 
   }
   // LCD Anzeige
-  lcd.setCursor(2, 0);
+  lcd.setCursor(3, 0);
   lcd.print(rtc.getTimeStr());
-  lcd.setCursor(2, 1);
-  lcd.print("Temp: "); lcd.print(rtc.getTemp() - 2.75, 1); lcd.print(" C ");
+  lcd.setCursor(3, 1);
+  lcd.print("Temp:"); lcd.print(rtc.getTemp() - 2.75, 1);
   
   Serial.print(rtc.getTimeStr());
   Serial.print(" | Temp: ");
