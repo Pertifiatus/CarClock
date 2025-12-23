@@ -42,7 +42,7 @@ void setup() {
 
 void loop() {
   t = rtc.getTime();
-  float currentTemp = rtc.getTemp() - 2.25;
+  float currentTemp = rtc.getTemp() - 2.75;
 
   // --- GRUPPE 1: STUNDEN  ---
   int h = t.hour % 12; if (h == 0) h = 12;
@@ -90,9 +90,9 @@ void loop() {
   }
   */
   // LCD Anzeige
-  lcd.setCursor(0, 0);
+  lcd.setCursor(2, 0);
   lcd.print(rtc.getTimeStr());
-  lcd.setCursor(0, 1);
+  lcd.setCursor(2, 1);
   lcd.print("Temp: "); lcd.print(currentTemp, 1); lcd.print(" C ");
   
   Serial.print(rtc.getTimeStr());

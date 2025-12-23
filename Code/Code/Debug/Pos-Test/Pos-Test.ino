@@ -41,7 +41,7 @@ void loop() {
   TempServo.write(171);
   Serial.println("Start");
 delay(5000);
-
+/*
   StdServo.write(138);
   MinServo.write(140);
   FuelServo.write(153);
@@ -69,4 +69,5 @@ delay(5000);
   TempServo.write(85);
   Serial.println("Ending");
 delay(5000);
+*/
 }
