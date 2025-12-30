@@ -29,9 +29,11 @@ void setup() {
   lcd.setCursor(3, 0);
   lcd.print("Willkommen");
   lcd.setCursor(3, 1);
-  lcd.print("Sibel");
+  lcd.print("Sibel <3");
   delay(2000);
   lcd.clear();
+  lcd.setCursor(3, 0);
+  lcd.print("Von Per");
   lcd.setCursor(0, 1);
   lcd.print("      <3       ");
   delay(3000);
@@ -174,8 +176,8 @@ void loop() {
     oFuel = fPos;
   }
   */
-  if(t.hour>=21) lcd.noBacklight();
-  if(t.hour<21) lcd.backlight();
+  if(t.hour>=21 || t.hour<= 6) lcd.noBacklight();
+  else lcd.backlight();
 
   }
   // LCD Anzeige
